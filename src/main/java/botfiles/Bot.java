@@ -35,13 +35,13 @@ import com.sedmelluq.discord.lavaplayer.player.*;
 
 class BotListeners{
 	static Commands commands = new Commands();
-	AudioPlayerManager playerManager; 
+	/*AudioPlayerManager playerManager; 
 	BotListeners(){
 
 	    this.playerManager = new DefaultAudioPlayerManager();
 	    AudioSourceManagers.registerRemoteSources(playerManager);
 	    AudioSourceManagers.registerLocalSource(playerManager);
-	}
+	}*/
 	
 	@EventSubscriber
 	public static void onMessage(MessageReceivedEvent evt){
@@ -74,5 +74,6 @@ public class Bot{
 		client = getClient(TOKEN, true);
 		EventDispatcher dispatcher = client.getDispatcher();
 		dispatcher.registerListener(new BotListeners());
+		
 	}
 }
