@@ -1,18 +1,11 @@
 package botfiles;
 
-import sx.blah.discord.api.ClientBuilder;
-import sx.blah.discord.api.IDiscordClient;
-import sx.blah.discord.api.events.EventDispatcher;
-import sx.blah.discord.api.events.EventSubscriber;
+
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
 import sx.blah.discord.handle.impl.events.ReadyEvent;
 import sx.blah.discord.handle.obj.*;
 import sx.blah.discord.util.DiscordException;
 import sx.blah.discord.handle.audio.*;
-import sx.blah.discord.handle.obj.IChannel;
-import sx.blah.discord.handle.obj.IGuild;
-import sx.blah.discord.handle.obj.IMessage;
-import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.util.MissingPermissionsException;
 import sx.blah.discord.util.RateLimitException;
 
@@ -26,8 +19,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.util.List;
 import java.util.Random;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Map;
 
 import com.sedmelluq.discord.lavaplayer.player.*;
 
@@ -38,25 +31,24 @@ public class Commands {
 	HashMap<String, AudioPlayer> players;
 	HashMap<String, TrackScheduler> schedulers;
 	HashMap<String, AudioProvider> providers;
-	/*AudioPlayerManager playerManager; 
-	AudioPlayer player1;
-	TrackScheduler scheduler;
-	AudioProvider provider;*/
+	private final String HELP_MESSAGE = "**Commands**\n\n"
+			+ prefix + "play [url] - Plays music in your voice channel, supports youtube, soundcloud, and more\n\n"
+			+ prefix + "gachi - gachiGASM\n\n"
+			+ prefix + "hi - Says hi!\n\n"
+			+ prefix + "stop - Stops the music\n\n"
+			+ prefix + "prefix - Changes the prefix\n\n"
+            + prefix + "volume [number] - Changes the volume of the music\n\n"
+            + prefix + "skip - Skips the current song\n\n"
+            + prefix + "nuke [number] - Deletes [number] messages\n\n"
+			+ prefix + "help - Displays this help message";
+	
 	Commands(){
 
 		players = new HashMap<>();
 		schedulers = new HashMap<>();
 		managers = new HashMap<>();
 		providers = new HashMap<>();
-		/*
-	    this.playerManager = new DefaultAudioPlayerManager();
-	    AudioSourceManagers.registerRemoteSources(playerManager);
-	    AudioSourceManagers.registerLocalSource(playerManager);
-	    player1 = playerManager.createPlayer();
-	    scheduler = new TrackScheduler(player1);
-	    provider = new AudioProvider(player1);
-	    player1.addListener(scheduler);
-	    */
+		
 	}
 	
 	 /**
@@ -301,6 +293,76 @@ public class Commands {
 			} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
 				e.printStackTrace();
 			}
+		}
+		/*-------help command------------------------------------------*/
+		if(command[0].equals(prefix + "help")){
+			try{
+				evt.getMessage().getChannel().sendMessage(HELP_MESSAGE);
+			} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+				e.printStackTrace();
+			}
+		}
+
+		
+		/*-------nuke command------------------------------------------*/
+		if(command[0].equals(prefix + "nuke")){
+			EnumSet<Permissions> permissions = evt.getMessage().getAuthor().getPermissionsForGuild(evt.getMessage().getGuild());			
+			if(permissions.contains(Permissions.MANAGE_MESSAGES)){
+				
+				//user can delete, go delete
+				if(command.length > 1){
+					try{
+						int numberToNuke = Integer.parseInt(command[1]);
+						for(int i = 0; i < numberToNuke; i++){
+							try {
+								evt.getMessage().getChannel().getMessages().getLatestMessage().delete();
+								try{
+									Thread.sleep(20);
+								}
+								catch(InterruptedException e){
+									Thread.currentThread().interrupt();
+								}
+							} catch (MissingPermissionsException | DiscordException e) {
+								e.printStackTrace();
+							} catch(sx.blah.discord.util.RateLimitException e){
+								
+								//rate limited, pause for a while
+								try {
+								    Thread.sleep(e.getRetryDelay());                
+								} catch(InterruptedException ex) {
+								    Thread.currentThread().interrupt();
+								}
+							}
+							
+													
+						}
+					}
+					catch(NumberFormatException e){
+						try {
+							evt.getMessage().getChannel().sendMessage("Usage: [prefix]nuke [lines]");
+						} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+							e1.printStackTrace();
+						}
+					}
+				}
+				else{
+					try {
+						evt.getMessage().getChannel().sendMessage("Usage: [prefix]nuke [lines]");
+					} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+						e1.printStackTrace();
+					}
+				}
+				
+			}
+			else{
+				
+				try {
+					evt.getMessage().getChannel().sendMessage("Sorry, you can't do this!");
+				} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+					e1.printStackTrace();
+				}
+			}
+			
 		}
 	}
 	
