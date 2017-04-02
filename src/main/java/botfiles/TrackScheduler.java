@@ -77,4 +77,8 @@ public class TrackScheduler extends AudioEventAdapter {
 		  player.startTrack(queue.poll(), false);
 	  }
 	  
+	  public boolean queueEmpty(){
+		  return queue.isEmpty();
+	  }
+	  
 	}

@@ -11,7 +11,9 @@ import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
 import sx.blah.discord.api.events.EventSubscriber;
 import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.obj.IVoiceChannel;
 import sx.blah.discord.util.DiscordException;
+import sx.blah.discord.util.audio.events.TrackFinishEvent;
 
 
 
@@ -25,6 +27,18 @@ class BotListeners{
 		String[] command = evt.getMessage().getContent().split(" ");
 		System.out.println(evt.getMessage().getContent());
 		commands.parseCommands(command, evt);
+	}
+	
+	@EventSubscriber
+	public static void onTrackFinish(TrackFinishEvent evt){
+		if(commands.schedulers.get(evt.getPlayer().getGuild().getID()).queueEmpty()){
+			System.out.println("empty");
+			for(IVoiceChannel c : Bot.client.getOurUser().getConnectedVoiceChannels()){
+				if(c.getGuild().getID().equals(evt.getPlayer().getGuild().getID())){
+					c.leave();
+				}
+			}
+		}
 	}
 }
 public class Bot{
