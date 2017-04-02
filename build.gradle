@@ -10,6 +10,7 @@
 
 plugins {
     id 'java'
+    id 'application'
     id 'idea'
     // Allows running "gradle shadowJar" to create an executable JAR of your project
     id 'com.github.johnrengelman.shadow' version '1.2.3'
@@ -20,23 +21,28 @@ group 'botfiles'
 version '1.0.0'
 
 sourceCompatibility = 1.8
-
+mainClassName = "botfiles.Bot"
 repositories {
     jcenter()
     maven {
         url "https://jitpack.io"
         
     }
-    maven{
-    	url "http://repo.bastian-oppermann.de"
-    }
+
 }
+
+
 
 dependencies {
     compile "com.github.austinv11:Discord4j:2.7.0"
-    compile "de.btobastian.sdcf4j:sdcf4j-core:1.0.4"
-    compile "de.btobastian.sdcf4j:sdcf4j-discord4j:1.0.4"
     compile "com.sedmelluq:lavaplayer:1.2.34"
     // Allows you to log events from Discord4J
     compile "ch.qos.logback:logback-classic:1.1.7"
+}
+
+jar {
+    manifest {
+        attributes( 'Main-Class': "botfiles.Bot")
+        		   
+    }
 }
