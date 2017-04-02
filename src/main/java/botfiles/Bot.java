@@ -18,13 +18,7 @@ import sx.blah.discord.util.DiscordException;
 
 class BotListeners{
 	static Commands commands = new Commands();
-	/*AudioPlayerManager playerManager; 
-	BotListeners(){
 
-	    this.playerManager = new DefaultAudioPlayerManager();
-	    AudioSourceManagers.registerRemoteSources(playerManager);
-	    AudioSourceManagers.registerLocalSource(playerManager);
-	}*/
 	
 	@EventSubscriber
 	public static void onMessage(MessageReceivedEvent evt){
@@ -38,7 +32,6 @@ public class Bot{
 
 	static IDiscordClient client;
 		
-	
 	/*------------------------------------------------------------*/
 	public static IDiscordClient getClient(String token, boolean login) throws DiscordException{
 		ClientBuilder clientBuilder = new ClientBuilder();
@@ -54,11 +47,9 @@ public class Bot{
 
 	
 	public static void main(String args[]) {
-		
 		try {
 			client = getClient(TOKEN, true);
 		} catch (DiscordException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		EventDispatcher dispatcher = client.getDispatcher();

@@ -25,36 +25,63 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.util.List;
+import java.util.Random;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.sedmelluq.discord.lavaplayer.player.*;
 
 public class Commands {
 	String prefix = "!";
 	final String gachiURL = "https://www.youtube.com/playlist?list=PLnsDTwJ4UrjgAoQE0tzSfyOEjVWKbow_E";
-	AudioPlayerManager playerManager; 
+	HashMap<String, AudioPlayerManager> managers;
+	HashMap<String, AudioPlayer> players;
+	HashMap<String, TrackScheduler> schedulers;
+	HashMap<String, AudioProvider> providers;
+	/*AudioPlayerManager playerManager; 
 	AudioPlayer player1;
 	TrackScheduler scheduler;
-	AudioProvider provider;
+	AudioProvider provider;*/
 	Commands(){
 
+		players = new HashMap<>();
+		schedulers = new HashMap<>();
+		managers = new HashMap<>();
+		providers = new HashMap<>();
+		/*
 	    this.playerManager = new DefaultAudioPlayerManager();
 	    AudioSourceManagers.registerRemoteSources(playerManager);
 	    AudioSourceManagers.registerLocalSource(playerManager);
 	    player1 = playerManager.createPlayer();
 	    scheduler = new TrackScheduler(player1);
 	    provider = new AudioProvider(player1);
-	    
 	    player1.addListener(scheduler);
+	    */
 	}
 	
+	 /**
+	 * Executes actions for !play
+	 * @param command array of Strings representing commands
+	 * @param evt MessageReceivedEvent triggered
+	 */
 	public void parsePlay(String[] command, MessageReceivedEvent evt){
+		String id = evt.getMessage().getChannel().getGuild().getID();
+
+		if(!managers.containsKey(id)){
+			managers.put(id, new DefaultAudioPlayerManager());
+			AudioSourceManagers.registerLocalSource(managers.get(id));
+			AudioSourceManagers.registerRemoteSources(managers.get(id));
+			players.put(id, managers.get(id).createPlayer());
+			schedulers.put(id, new TrackScheduler(players.get(id)));
+			providers.put(id, new AudioProvider(players.get(id)));
+			players.get(id).addListener(schedulers.get(id));
+		}
 		List<IVoiceChannel> channels = evt.getMessage().getAuthor().getConnectedVoiceChannels();
-		evt.getMessage().getGuild().getAudioManager().setAudioProvider(provider);
+		evt.getMessage().getGuild().getAudioManager().setAudioProvider(providers.get(id));
 		if(channels.size() < 1){
 			try {
 				evt.getMessage().getChannel().sendMessage("Please connect to a voice channel first");
 			} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 			return;
@@ -62,29 +89,108 @@ public class Commands {
 		try {
 			channels.get(0).join();
 		} catch (MissingPermissionsException e) {
-			// TODO Auto-generated catch block
 			try {
 				evt.getMessage().getChannel().sendMessage("Oops, I can't access that channel");
 			} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		}
 		
+		
+		
+
 		//load the song in question
-		playerManager.loadItem(command[1], new AudioLoadResultHandler() {
+		managers.get(id).loadItem(command[1], new AudioLoadResultHandler() {
 			
 			  //anonymous class to handle results of audio load
 			  @Override
 			  public void trackLoaded(AudioTrack track) {
-			      scheduler.queue(track);
+			      schedulers.get(id).queue(track);
 			  }
 
 			  @Override
 			  public void playlistLoaded(AudioPlaylist playlist) {
 			    for (AudioTrack track : playlist.getTracks()) {
-			      scheduler.queue(track);
+			      schedulers.get(id).queue(track);
 			    }
+			  }
+
+			  @Override
+			  public void noMatches() {
+				  try {
+					evt.getMessage().getChannel().sendMessage("Video not found");
+				} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+					e.printStackTrace();
+				}
+			  }
+
+			  @Override
+			  public void loadFailed(FriendlyException throwable) {
+				  try {
+					evt.getMessage().getChannel().sendMessage("Something went wrong");
+				} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+					e.printStackTrace();
+				}
+			  }
+			});
+	}
+	
+	/**
+	 * Executes actions for !gachi
+	 * @param evt MessageReceivedEvent triggered
+	 */
+	public void parseGachi(MessageReceivedEvent evt){
+		String id = evt.getMessage().getChannel().getGuild().getID();
+
+		if(!managers.containsKey(id)){
+			managers.put(id, new DefaultAudioPlayerManager());
+			AudioSourceManagers.registerLocalSource(managers.get(id));
+			AudioSourceManagers.registerRemoteSources(managers.get(id));
+			players.put(id, managers.get(id).createPlayer());
+			schedulers.put(id, new TrackScheduler(players.get(id)));
+			providers.put(id, new AudioProvider(players.get(id)));
+			players.get(id).addListener(schedulers.get(id));
+		}
+		List<IVoiceChannel> channels = evt.getMessage().getAuthor().getConnectedVoiceChannels();
+		evt.getMessage().getGuild().getAudioManager().setAudioProvider(providers.get(id));
+		if(channels.size() < 1){
+			try {
+				evt.getMessage().getChannel().sendMessage("Please connect to a voice channel first");
+			} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+				e1.printStackTrace();
+			}
+			return;
+		}
+		try {
+			channels.get(0).join();
+		} catch (MissingPermissionsException e) {
+			try {
+				evt.getMessage().getChannel().sendMessage("Oops, I can't access that channel");
+			} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+				e1.printStackTrace();
+			}
+		}
+		
+	
+		//load the song in question
+		managers.get(id).loadItem(gachiURL, new AudioLoadResultHandler() {
+			
+			  //anonymous class to handle results of audio load
+			  @Override
+			  public void trackLoaded(AudioTrack track) {
+			      schedulers.get(id).queue(track);
+			  }
+
+			  @Override
+			  public void playlistLoaded(AudioPlaylist playlist) {
+				List<AudioTrack> tracks = playlist.getTracks();
+			    int listSize = tracks.size();
+				//shuffle
+				for(int i = 0; i < listSize; i++){
+					Random rng = new Random();
+					int nextIndex = rng.nextInt(tracks.size());
+					schedulers.get(id).queue(tracks.remove(nextIndex));
+				}
 			  }
 
 			  @Override
@@ -108,12 +214,12 @@ public class Commands {
 	}
 	public void parseCommands(String[] command, MessageReceivedEvent evt){
 		
+		String id = evt.getMessage().getChannel().getGuild().getID();
 		/*-------Hi Command----------------------------------------*/
 		if(command[0].equals(prefix + "hi")){
 			try {
 				evt.getMessage().getChannel().sendMessage("hi");
 			} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -127,29 +233,73 @@ public class Commands {
 		/*-------Stop Command----------------------------------------*/
 
 		if(command[0].equals(prefix + "stop")){
-			player1.stopTrack();
+			players.get(id).stopTrack();
 			for(IVoiceChannel c : Bot.client.getOurUser().getConnectedVoiceChannels()){
-				c.leave();
+				if(c.getGuild().getID().equals(id)){
+					c.leave();
+				}
 			}
 		}
 		
 		/*-------Volume Command----------------------------------------*/
 
 		if(command[0].equals(prefix + "volume")){
-			try{
-				player1.setVolume(Integer.parseInt(command[1]));
+			if(command.length < 2){
 				try {
-					evt.getMessage().getChannel().sendMessage("Volume set to: " + command[1]);
+					evt.getMessage().getChannel().sendMessage("Volume set to: " + players.get(id).getVolume());
 				} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
 					e1.printStackTrace();
 				}
 			}
-			catch(NumberFormatException e){
-				try {
-					evt.getMessage().getChannel().sendMessage("Invalid volume");
-				} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
-					e1.printStackTrace();
+			else{
+				try{
+					players.get(id).setVolume(Integer.parseInt(command[1]));
+					try {
+						evt.getMessage().getChannel().sendMessage("Volume set to: " + command[1]);
+					} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+						e1.printStackTrace();
+					}
 				}
+				catch(NumberFormatException e){
+					try {
+						evt.getMessage().getChannel().sendMessage("Invalid volume");
+					} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		}
+		/*-------gachiGASM Command----------------------------------------*/
+		if(command[0].equals(prefix + "gachi")){
+			parseGachi(evt);
+		}
+		
+		/*-------prefix Command----------------------------------------*/
+		if(command[0].equals(prefix + "prefix")){
+			if(command.length < 2){
+				try {
+					evt.getMessage().getChannel().sendMessage("The prefix is currently: " + prefix);
+				} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+					e.printStackTrace();
+				}
+			}
+			else{
+				prefix = command[1];
+				try {
+					evt.getMessage().getChannel().sendMessage("The prefix is now: " + prefix);
+				} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		/*-------skip command------------------------------------------*/
+		if(command[0].equals(prefix + "skip")){
+			schedulers.get(id).nextTrack();
+			try {
+				evt.getMessage().getChannel().sendMessage("Song skipped");
+			} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+				e.printStackTrace();
 			}
 		}
 	}

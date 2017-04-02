@@ -37,6 +37,7 @@ public class TrackScheduler extends AudioEventAdapter {
 
 	  @Override
 	  public void onTrackStart(AudioPlayer player, AudioTrack track) {
+		  
 	    // A track started playing
 	  }
 
