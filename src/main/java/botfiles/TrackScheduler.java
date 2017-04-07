@@ -19,10 +19,13 @@ import com.sedmelluq.discord.lavaplayer.player.*;
 public class TrackScheduler extends AudioEventAdapter {
 	
 	  private BlockingQueue<AudioTrack> queue;
+	  private BlockingQueue<String> urls;
 	  private final AudioPlayer player;
+	  private String nowPlaying = "";
 	  public TrackScheduler(AudioPlayer player){
 		  this.player = player;
 		  this.queue = new LinkedBlockingQueue<AudioTrack>();
+		  this.urls = new LinkedBlockingQueue<String>();
 	  }
 	  @Override
 	  public void onPlayerPause(AudioPlayer player) {
@@ -37,17 +40,17 @@ public class TrackScheduler extends AudioEventAdapter {
 
 	  @Override
 	  public void onTrackStart(AudioPlayer player, AudioTrack track) {
-		  
 	    // A track started playing
 	  }
 
 	  @Override
 	  public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-	    if (endReason.mayStartNext) {
-	    	nextTrack();
+		  //nowPlaying = "";
+	      if (endReason.mayStartNext) {
+	    	  nextTrack();
 	      // Start next track
-	    }
-
+	      }
+ 
 	    // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).
 	    // endReason == LOAD_FAILED: Loading of a track failed (mayStartNext = true).
 	    // endReason == STOPPED: The player was stopped.
@@ -67,6 +70,13 @@ public class TrackScheduler extends AudioEventAdapter {
 		  System.out.println("no audio");
 	  }
 	  
+	  public void queue(AudioTrack track, String url){
+		  if(!player.startTrack(track, true)){
+			  queue.offer(track);
+			  urls.offer(url);
+		  }
+	  }
+	  
 	  public void queue(AudioTrack track){
 		  if(!player.startTrack(track, true)){
 			  queue.offer(track);
@@ -75,10 +85,17 @@ public class TrackScheduler extends AudioEventAdapter {
 	  
 	  public void nextTrack(){
 		  player.startTrack(queue.poll(), false);
+		  nowPlaying = urls.poll();
+		  System.out.println("nowPlaying = " + nowPlaying);
+
 	  }
 	  
 	  public boolean queueEmpty(){
 		  return queue.isEmpty();
+	  }
+	  
+	  public String getNowPlaying(){
+		  return nowPlaying;
 	  }
 	  
 	}

@@ -40,10 +40,12 @@ class BotListeners{
 			}
 		}
 	}
+	
+	
+	
 }
 public class Bot{
 	static final String TOKEN = "MjQwOTM4MzA4NjE4NjgyMzY4.C8GDdg.G8Fjl0Y_od2k3okpiZNzFg72O_4";
-
 	static IDiscordClient client;
 		
 	/*------------------------------------------------------------*/

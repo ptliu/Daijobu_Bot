@@ -17,8 +17,11 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
+
+
 import java.util.List;
 import java.util.Random;
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 
@@ -27,10 +30,13 @@ import com.sedmelluq.discord.lavaplayer.player.*;
 public class Commands {
 	String prefix = "!";
 	final String gachiURL = "https://www.youtube.com/playlist?list=PLnsDTwJ4UrjgAoQE0tzSfyOEjVWKbow_E";
+	
+	//maps use the guild ID as keys
 	HashMap<String, AudioPlayerManager> managers;
 	HashMap<String, AudioPlayer> players;
 	HashMap<String, TrackScheduler> schedulers;
 	HashMap<String, AudioProvider> providers;
+	YoutubeSearch search;
 	private final String HELP_MESSAGE = "**Commands**\n\n"
 			+ prefix + "play [url] - Plays music in your voice channel, supports youtube, soundcloud, and more\n\n"
 			+ prefix + "gachi - gachiGASM\n\n"
@@ -40,7 +46,9 @@ public class Commands {
             + prefix + "volume [number] - Changes the volume of the music\n\n"
             + prefix + "skip - Skips the current song\n\n"
             + prefix + "nuke [number] - Deletes [number] messages\n\n"
-			+ prefix + "help - Displays this help message";
+			+ prefix + "help - Displays this help message"
+			+ prefix + "nowplaying - Displays the currently playing song";
+	
 	
 	Commands(){
 
@@ -48,6 +56,7 @@ public class Commands {
 		schedulers = new HashMap<>();
 		managers = new HashMap<>();
 		providers = new HashMap<>();
+		
 		
 	}
 	
@@ -98,28 +107,83 @@ public class Commands {
 			  //anonymous class to handle results of audio load
 			  @Override
 			  public void trackLoaded(AudioTrack track) {
-			      schedulers.get(id).queue(track);
+			      schedulers.get(id).queue(track, command[1]);
 			  }
 
 			  @Override
 			  public void playlistLoaded(AudioPlaylist playlist) {
 			    for (AudioTrack track : playlist.getTracks()) {
-			      schedulers.get(id).queue(track);
+			      schedulers.get(id).queue(track, command[1]);
 			    }
 			  }
 
 			  @Override
 			  public void noMatches() {
+				  search = new YoutubeSearch();
+				  String query = "";
+				  for(int i = 1; i < command.length; i++){
+					  query += command[i] + " ";
+				  }
 				  try {
-					evt.getMessage().getChannel().sendMessage("Video not found");
-				} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
-					e.printStackTrace();
-				}
+					search.search(query);
+				  } catch (IOException e1) {
+					  try {
+						  evt.getMessage().getChannel().sendMessage("Something went wrong");
+					  } catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+						  e.printStackTrace();
+					  }
+				  }
+				  if(search.getURLs().isEmpty()){
+					  try {
+						  evt.getMessage().getChannel().sendMessage("Video not found");
+					  } catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+						  e.printStackTrace();
+					  }
+				  }
+				  else{
+					  managers.get(id).loadItem(search.getURLs().get(0),new AudioLoadResultHandler() {
+						  @Override
+						  public void trackLoaded(AudioTrack track) {
+						      schedulers.get(id).queue(track, command[1]);
+						  }
+
+						@Override
+						public void playlistLoaded(AudioPlaylist playlist) {
+							for (AudioTrack track : playlist.getTracks()) {
+							      schedulers.get(id).queue(track, command[1]);
+							}
+							
+						}
+
+						@Override
+						public void noMatches() {
+							try {
+								  evt.getMessage().getChannel().sendMessage("Video not found2");
+							} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+								  e.printStackTrace();
+							  
+							}
+						}
+
+						@Override
+						public void loadFailed(FriendlyException exception) {
+							try {
+								evt.getMessage().getChannel().sendMessage("Something went wrong");
+							} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+								e.printStackTrace();
+							}
+							
+						}
+						  
+					  });
+				  }
+				  
+				  
 			  }
 
 			  @Override
 			  public void loadFailed(FriendlyException throwable) {
-				  try {
+				try {
 					evt.getMessage().getChannel().sendMessage("Something went wrong");
 				} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
 					e.printStackTrace();
@@ -127,6 +191,7 @@ public class Commands {
 			  }
 			});
 	}
+	
 	
 	/**
 	 * Executes actions for !gachi
@@ -205,6 +270,8 @@ public class Commands {
 			  }
 			});
 	}
+	
+	
 	public void parseCommands(String[] command, MessageReceivedEvent evt){
 		
 		String id = evt.getMessage().getChannel().getGuild().getID();
@@ -226,7 +293,17 @@ public class Commands {
 		/*-------Stop Command----------------------------------------*/
 
 		if(command[0].equals(prefix + "stop")){
-			players.get(id).stopTrack();
+			try{
+				players.get(id).stopTrack();
+			}
+			catch(NullPointerException e){
+				try {
+					evt.getMessage().getChannel().sendMessage("Currently no playing track");
+				} catch (MissingPermissionsException | RateLimitException | DiscordException e2) {
+					e2.printStackTrace();
+				}
+			}
+		
 			for(IVoiceChannel c : Bot.client.getOurUser().getConnectedVoiceChannels()){
 				if(c.getGuild().getID().equals(id)){
 					c.leave();
@@ -362,6 +439,17 @@ public class Commands {
 				} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
 					e1.printStackTrace();
 				}
+			}
+			
+		}
+		
+		/*---------------nowplaying----------------------------------------------------*/
+		if(command[0].equals(prefix + "nowplaying")){
+			TrackScheduler scheduler = schedulers.get(evt.getMessage().getChannel().getGuild().getID());
+			try {
+				evt.getMessage().getChannel().sendMessage("The current playing song is: " + scheduler.getNowPlaying());
+			} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+				e1.printStackTrace();
 			}
 			
 		}

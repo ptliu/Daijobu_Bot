@@ -24,6 +24,7 @@ sourceCompatibility = 1.8
 mainClassName = "botfiles.Bot"
 repositories {
     jcenter()
+    mavenCentral();
     maven {
         url "https://jitpack.io"
         
@@ -36,8 +37,10 @@ repositories {
 dependencies {
     compile "com.github.austinv11:Discord4j:2.7.0"
     compile "com.sedmelluq:lavaplayer:1.2.34"
+    compile 'com.google.apis:google-api-services-youtube:v3-rev183-1.22.0'
     // Allows you to log events from Discord4J
     compile "ch.qos.logback:logback-classic:1.1.7"
+    
 }
 
 jar {
