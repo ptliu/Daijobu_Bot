@@ -11,6 +11,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 
+import sx.blah.discord.api.IDiscordClient;
+import sx.blah.discord.handle.obj.IGuild;
+import sx.blah.discord.handle.obj.IVoiceChannel;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -22,10 +26,14 @@ public class TrackScheduler extends AudioEventAdapter {
 	  private BlockingQueue<String> urls;
 	  private final AudioPlayer player;
 	  private String nowPlaying = "";
-	  public TrackScheduler(AudioPlayer player){
+	  private IDiscordClient client;
+	  private IGuild guild;
+	  public TrackScheduler(AudioPlayer player, IDiscordClient client, IGuild guild){
 		  this.player = player;
 		  this.queue = new LinkedBlockingQueue<AudioTrack>();
 		  this.urls = new LinkedBlockingQueue<String>();
+		  this.client = client;
+		  this.guild = guild;
 	  }
 	  @Override
 	  public void onPlayerPause(AudioPlayer player) {
@@ -50,6 +58,7 @@ public class TrackScheduler extends AudioEventAdapter {
 	    	  nextTrack();
 	      // Start next track
 	      }
+	      
  
 	    // endReason == FINISHED: A track finished or died by an exception (mayStartNext = true).
 	    // endReason == LOAD_FAILED: Loading of a track failed (mayStartNext = true).
@@ -84,7 +93,16 @@ public class TrackScheduler extends AudioEventAdapter {
 	  }
 	  
 	  public void nextTrack(){
-		  player.startTrack(queue.poll(), false);
+		  AudioTrack track = queue.poll();
+		  player.startTrack(track, false);
+		  if(track == null){
+	    	  nowPlaying = "";
+	    	  for(IVoiceChannel c : Bot.client.getOurUser().getConnectedVoiceChannels()){
+					if(c.getGuild().getID().equals(guild.getID())){
+						c.leave();
+					}
+			  }
+	      }
 		  nowPlaying = urls.poll();
 		  System.out.println("nowPlaying = " + nowPlaying);
 

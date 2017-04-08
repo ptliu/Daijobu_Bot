@@ -6,6 +6,8 @@
 package botfiles;
 
 
+import com.sedmelluq.discord.lavaplayer.player.event.TrackEndEvent;
+
 import sx.blah.discord.api.ClientBuilder;
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.EventDispatcher;
@@ -30,15 +32,8 @@ class BotListeners{
 	}
 	
 	@EventSubscriber
-	public static void onTrackFinish(TrackFinishEvent evt){
-		if(commands.schedulers.get(evt.getPlayer().getGuild().getID()).queueEmpty()){
-			System.out.println("empty");
-			for(IVoiceChannel c : Bot.client.getOurUser().getConnectedVoiceChannels()){
-				if(c.getGuild().getID().equals(evt.getPlayer().getGuild().getID())){
-					c.leave();
-				}
-			}
-		}
+	public static void onTrackEnd(TrackEndEvent evt){
+		
 	}
 	
 	

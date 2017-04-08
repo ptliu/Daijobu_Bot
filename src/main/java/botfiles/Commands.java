@@ -74,7 +74,7 @@ public class Commands {
 			AudioSourceManagers.registerLocalSource(managers.get(id));
 			AudioSourceManagers.registerRemoteSources(managers.get(id));
 			players.put(id, managers.get(id).createPlayer());
-			schedulers.put(id, new TrackScheduler(players.get(id)));
+			schedulers.put(id, new TrackScheduler(players.get(id), evt.getMessage().getClient(), evt.getMessage().getGuild()));
 			providers.put(id, new AudioProvider(players.get(id)));
 			players.get(id).addListener(schedulers.get(id));
 		}
@@ -205,7 +205,7 @@ public class Commands {
 			AudioSourceManagers.registerLocalSource(managers.get(id));
 			AudioSourceManagers.registerRemoteSources(managers.get(id));
 			players.put(id, managers.get(id).createPlayer());
-			schedulers.put(id, new TrackScheduler(players.get(id)));
+			schedulers.put(id, new TrackScheduler(players.get(id), evt.getMessage().getClient(), evt.getMessage().getGuild()));
 			providers.put(id, new AudioProvider(players.get(id)));
 			players.get(id).addListener(schedulers.get(id));
 		}
