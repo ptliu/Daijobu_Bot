@@ -10,7 +10,6 @@
 
 plugins {
     id 'java'
-    id 'application'
     id 'idea'
     // Allows running "gradle shadowJar" to create an executable JAR of your project
     id 'com.github.johnrengelman.shadow' version '1.2.3'
@@ -21,7 +20,7 @@ group 'botfiles'
 version '1.0.0'
 
 sourceCompatibility = 1.8
-mainClassName = "botfiles.Bot"
+
 repositories {
     jcenter()
     mavenCentral();
@@ -45,7 +44,13 @@ dependencies {
 
 jar {
     manifest {
-        attributes( 'Main-Class': "botfiles.Bot")
-        		   
+        attributes( 'Main-Class': "botfiles.Bot")   
     }
+    from {
+    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task cleanTemp(type: Delete){
+	delete 'build/tmp'
 }

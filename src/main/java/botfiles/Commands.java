@@ -385,34 +385,43 @@ public class Commands {
 		/*-------nuke command------------------------------------------*/
 		if(command[0].equals(prefix + "nuke")){
 			EnumSet<Permissions> permissions = evt.getMessage().getAuthor().getPermissionsForGuild(evt.getMessage().getGuild());			
-			if(permissions.contains(Permissions.MANAGE_MESSAGES)){
+			if(permissions.contains(Permissions.ADMINISTRATOR)){
 				
 				//user can delete, go delete
 				if(command.length > 1){
 					try{
 						int numberToNuke = Integer.parseInt(command[1]);
-						for(int i = 0; i < numberToNuke; i++){
-							try {
-								evt.getMessage().getChannel().getMessages().getLatestMessage().delete();
-								try{
-									Thread.sleep(20);
-								}
-								catch(InterruptedException e){
-									Thread.currentThread().interrupt();
-								}
-							} catch (MissingPermissionsException | DiscordException e) {
-								e.printStackTrace();
-							} catch(sx.blah.discord.util.RateLimitException e){
-								
-								//rate limited, pause for a while
+						if(numberToNuke < 50){
+							for(int i = 0; i < numberToNuke; i++){
 								try {
-								    Thread.sleep(e.getRetryDelay());                
-								} catch(InterruptedException ex) {
-								    Thread.currentThread().interrupt();
+									evt.getMessage().getChannel().getMessages().getLatestMessage().delete();
+									try{
+										Thread.sleep(20);
+									}
+									catch(InterruptedException e){
+										Thread.currentThread().interrupt();
+									}
+								} catch (MissingPermissionsException | DiscordException e) {
+									e.printStackTrace();
+								} catch(sx.blah.discord.util.RateLimitException e){
+								
+									//rate limited, pause for a while
+									try {
+										Thread.sleep(e.getRetryDelay());                
+									} catch(InterruptedException ex) {
+										Thread.currentThread().interrupt();
+									}
 								}
-							}
 							
 													
+							}
+						}
+						else{
+							try {
+								evt.getMessage().getChannel().sendMessage("Sorry, you can't nuke that many!");
+							} catch (MissingPermissionsException | RateLimitException | DiscordException e1) {
+								e1.printStackTrace();
+							}
 						}
 					}
 					catch(NumberFormatException e){
