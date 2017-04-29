@@ -69,6 +69,7 @@ public class Commands {
 	public void parsePlay(String[] command, MessageReceivedEvent evt){
 		String id = evt.getMessage().getChannel().getGuild().getID();
 
+		//if players, etc don't exist for this guild, create them
 		if(!managers.containsKey(id)){
 			managers.put(id, new DefaultAudioPlayerManager());
 			AudioSourceManagers.registerLocalSource(managers.get(id));
@@ -78,6 +79,8 @@ public class Commands {
 			providers.put(id, new AudioProvider(players.get(id)));
 			players.get(id).addListener(schedulers.get(id));
 		}
+		
+		
 		List<IVoiceChannel> channels = evt.getMessage().getAuthor().getConnectedVoiceChannels();
 		evt.getMessage().getGuild().getAudioManager().setAudioProvider(providers.get(id));
 		if(channels.size() < 1){
@@ -272,9 +275,16 @@ public class Commands {
 	}
 	
 	
-	public void parseCommands(String[] command, MessageReceivedEvent evt){
+	public void parseCommands(String[] command, MessageReceivedEvent evt) {
 		
 		String id = evt.getMessage().getChannel().getGuild().getID();
+		
+		try {
+			evt.getMessage().addReaction(evt.getMessage().getChannel().getGuild().getEmojiByID("303722611018432523"));
+		} catch (MissingPermissionsException | RateLimitException | DiscordException e3) {
+			
+		}
+		
 		/*-------Hi Command----------------------------------------*/
 		if(command[0].equals(prefix + "hi")){
 			try {

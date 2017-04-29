@@ -63,11 +63,7 @@ public class YoutubeSearch {
 	    } 
 		catch(Throwable t){
 			
-		}
-		
-		
-		
-			
+		}	
 		
 		
 		
