@@ -46,8 +46,8 @@ public class Commands {
             + prefix + "volume [number] - Changes the volume of the music\n\n"
             + prefix + "skip - Skips the current song\n\n"
             + prefix + "nuke [number] - Deletes [number] messages\n\n"
-			+ prefix + "help - Displays this help message"
-			+ prefix + "nowplaying - Displays the currently playing song";
+			+ prefix + "help - Displays this help message\n\n"
+			+ prefix + "nowplaying - Displays the currently playing song\n\n";
 	
 	
 	Commands(){
@@ -278,13 +278,22 @@ public class Commands {
 	public void parseCommands(String[] command, MessageReceivedEvent evt) {
 		
 		String id = evt.getMessage().getChannel().getGuild().getID();
-		
+		/*
 		try {
 			evt.getMessage().addReaction(evt.getMessage().getChannel().getGuild().getEmojiByID("303722611018432523"));
 		} catch (MissingPermissionsException | RateLimitException | DiscordException e3) {
 			
-		}
+		}*/
 		
+		if(evt.getMessage().getAuthor().getName() == "TehTralah") {
+			
+			try {
+				evt.getMessage().delete();
+			} catch (MissingPermissionsException | RateLimitException | DiscordException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		/*-------Hi Command----------------------------------------*/
 		if(command[0].equals(prefix + "hi")){
 			try {

@@ -26,7 +26,7 @@ import java.util.LinkedList;
 
 
 public class YoutubeSearch {
-	private static final String API_KEY = "AIzaSyDgQLgG3AimATHtVg4Q7gBc4LTrBpHM8a8";
+
 
 	private YouTube youtube;
 	private static final HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
